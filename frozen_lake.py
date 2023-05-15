@@ -7,13 +7,13 @@ from geneteic_algo_solver import GeneticAlgorithm
 
 class FrozenLake:
     
-    def __init__(self, size=4, population=[]):
+    def __init__(self, size=5, population=[]):
         self.size = size
         self.population = population
         self.board = np.zeros((size, size))
         self.player_pos = (0, 0)
-        self.goal_pos = (size-1, size-1)
-        self.hole_positions = [(1,1), (3,3), (2,0)]
+        self.goal_pos = (self.size-1, self.size-1)
+        self.hole_positions = self.generate_hole_positions()
         self.action_space = ['u', 'd', 'l', 'r']
         self.rewards = {'goal': 10, 'hole': -10, 'move': -1}
         self.game_over = False
@@ -23,6 +23,29 @@ class FrozenLake:
         self.screen = pygame.display.set_mode((500, 500))
         self.font = pygame.font.SysFont('Arial', 20)
         self.colors = {'black': (0, 0, 0), 'white': (255, 255, 255), 'red': (255, 0, 0), 'green': (0, 255, 0), 'blue': (0, 0, 255)}
+
+    def generate_hole_positions(self):
+
+        artificial_path = [(0,0), self.goal_pos]
+        current_pos = (0,0)
+        while current_pos != self.goal_pos:
+            if current_pos[0] == self.goal_pos[0]:
+                current_pos = (current_pos[0], current_pos[1]+1)
+            elif current_pos[1] == self.goal_pos[1]:
+                current_pos = (current_pos[0]+1, current_pos[1])
+            else:
+                if random.random() > 0.5:
+                    current_pos = (current_pos[0], current_pos[1]+1)
+                else:
+                    current_pos = (current_pos[0]+1, current_pos[1])
+            artificial_path.append(current_pos)
+        hole_positions = []
+        for i in range(self.size):
+            for j in range(self.size):
+                if (i,j) not in artificial_path and (i,j) not in artificial_path:
+                    if random.random() > 0.3:
+                        hole_positions.append((i,j))
+        return hole_positions
 
     def render(self):
         block_size = 100
@@ -47,7 +70,7 @@ class FrozenLake:
         pygame.display.flip()
 
     def evaluate_fitness(self):
-        return self.player_pos[0] + self.player_pos[1]
+        return (self.player_pos[0] + self.player_pos[1])
 
     def take_action(self, action):
         if self.game_over:
@@ -63,7 +86,6 @@ class FrozenLake:
 
         if new_pos[0] < 0 or new_pos[0] >= self.size or new_pos[1] < 0 or new_pos[1] >= self.size:
             reward = self.rewards['move']
-            self.fitness = self.evaluate_fitness()
         elif new_pos == self.goal_pos:
             reward = self.rewards['goal']
             self.game_over = True
@@ -72,10 +94,12 @@ class FrozenLake:
         elif new_pos in self.hole_positions:
             reward = self.rewards['hole']
             self.game_over = True
+            self.fitness = 0
             print('Game Over')
         else:
             reward = self.rewards['move']
             self.player_pos = new_pos
+            self.fitness = self.evaluate_fitness()
 
         return reward
 
@@ -85,7 +109,7 @@ class FrozenLake:
             self.render()
             pygame.display.update()
             reward = self.take_action(mov)
-            pygame.time.wait(500)
+            pygame.time.wait(100)
 
             if self.won:
                 print('Yay')
@@ -114,17 +138,17 @@ class FrozenLake:
                     self.render()
                     self.take_action(movement)
                     pygame.display.update()
-                    pygame.time.wait(500)
+                    pygame.time.wait(100)
                     
                     if self.game_over:
                         print("game over for this gene")
                         self.restart()
                         continue
 
-                    if self.fitness >= best_fitness:
-                        best_fitness = self.fitness
-                        best_gene = gene
-                    print(f"best gene is {best_gene}")              
+                if self.fitness >= best_fitness:
+                    best_fitness = self.fitness
+                    best_gene = gene
+                print(f"best gene is {best_gene}")              
             try:
                 step_gene = best_gene.copy().tolist()
             except AttributeError:
@@ -139,8 +163,6 @@ class FrozenLake:
 
             # Update game state using the best gene
             self.play_auto_agent(best_gene)
-        
-        print(f"Best gene: {best_gene}")
 
 
     def play(self, auto_agent=False):
@@ -179,7 +201,6 @@ class FrozenLake:
             # wait for a short time to slow down the game
             clock.tick(10)
 
-ga = GeneticAlgorithm(10, 6, ["r", "u", "l", "d"])
-fl = FrozenLake( population=ga.initialize_population())
+fl = FrozenLake()
 fl.solve_genetic_algorithm(5, 2)
 #fl.play()
