@@ -7,9 +7,9 @@ from geneteic_algo_solver import GeneticAlgorithm
 
 class FrozenLake:
     
-    def __init__(self, size=5, population=[]):
-        self.size = size
-        self.population = population
+    def __init__(self, size: int = 4, population: list =[], slippery: bool= False):
+        self.size: int = size
+        self.population: int = population
         self.board = np.zeros((size, size))
         self.player_pos = (0, 0)
         self.goal_pos = (self.size-1, self.size-1)
@@ -19,6 +19,8 @@ class FrozenLake:
         self.game_over = False
         self.won = False
         self.fitness = 0
+        self.best_fitness = 0
+        self.slippery = slippery
         pygame.init()
         self.screen = pygame.display.set_mode((500, 500))
         self.font = pygame.font.SysFont('Arial', 20)
@@ -70,7 +72,7 @@ class FrozenLake:
         pygame.display.flip()
 
     def evaluate_fitness(self):
-        return (self.player_pos[0] + self.player_pos[1])
+        self.fitness =  (self.player_pos[0] + self.player_pos[1])
 
     def take_action(self, action):
         if self.game_over:
@@ -99,7 +101,7 @@ class FrozenLake:
         else:
             reward = self.rewards['move']
             self.player_pos = new_pos
-            self.fitness = self.evaluate_fitness()
+            self.evaluate_fitness()
 
         return reward
 
@@ -145,7 +147,7 @@ class FrozenLake:
                         self.restart()
                         continue
 
-                if self.fitness >= best_fitness:
+                if self.fitness > best_fitness:
                     best_fitness = self.fitness
                     best_gene = gene
                 print(f"best gene is {best_gene}")              
@@ -203,4 +205,4 @@ class FrozenLake:
 
 fl = FrozenLake()
 fl.solve_genetic_algorithm(5, 2)
-#fl.play()
+# #fl.play()

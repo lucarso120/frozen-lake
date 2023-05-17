@@ -14,6 +14,8 @@ class GeneticAlgorithm:
             population.append(gene)
         return population
 
+        
+
 
     
     
