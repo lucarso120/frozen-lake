@@ -25,19 +25,16 @@ class FrozenLake:
         self.font = pygame.font.SysFont('Arial', 20)
         self.colors = {'black': (0, 0, 0), 'white': (255, 255, 255), 'red': (255, 0, 0), 'green': (0, 255, 0), 'blue': (0, 0, 255)}
 
-    def calculate_fitness(self, gene_length_penalty: int = 1):
+    def calculate_fitness(self, gene, gene_length_penalty: int = 0.5):
         if not self.game_over:
-            self.fitness = self.player_pos[0] + self.player_pos[1] + 10 - (len(self.population) * gene_length_penalty)
+            self.fitness = self.player_pos[0] + self.player_pos[1] +1
 
     def calculate_gene_fitness(self, gene: list[str]) -> int:
         for movement in gene:
             self.take_action(movement)
-            self.calculate_fitness()
             if self.game_over:
                 return 1
-                self.restart()
-        fitness = self.fitness
-        self.restart()
+        fitness = self.calculate_fitness(gene)
         return fitness
 
     def generate_hole_positions(self):
@@ -125,7 +122,6 @@ class FrozenLake:
         else:
             reward = self.rewards['move']
             self.player_pos = new_pos
-            self.calculate_fitness()
         return reward
 
     def play_auto_agent(self, movements):
@@ -141,6 +137,7 @@ class FrozenLake:
                 pygame.time.wait(500)
                 pygame.quit()
                 sys.exit()
+        self.calculate_fitness(movements)
 
     def restart(self):
         self.game_over = False
@@ -170,7 +167,7 @@ class FrozenLake:
                         self.restart()
                         continue
                 breakpoint()           
-                if self.fitness > best_fitness:
+                if self.fitness >= best_fitness:
                     best_fitness = self.fitness
                     best_gene = gene
                 print(f"best gene is {best_gene}")              
