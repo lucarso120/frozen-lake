@@ -2,7 +2,11 @@ import numpy as np
 import random
 import pygame
 import sys 
+from images.load_images import load_image
 
+player_image = load_image(f"images/student.png", size=(100, 100))
+goal_image = load_image(f"images/nova.png", size=(100, 100))
+hole_image = load_image(f"images/cat.png", size=(100, 100))
 
 class FrozenLake:
     
@@ -66,18 +70,17 @@ class FrozenLake:
             for j in range(self.size):
                 rect = pygame.Rect(j * block_size, i * block_size, block_size, block_size)
                 if self.player_pos == (i, j):
-                    pygame.draw.rect(self.screen, self.colors['green'], rect)
+                    self.screen.blit(player_image, (j * block_size, i * block_size))
                     label = self.font.render('P', True, self.colors['white'])
-                    self.screen.blit(label, (j * block_size + 40, i * block_size + 40))
 
                 elif self.goal_pos == (i, j):
-                    pygame.draw.rect(self.screen, self.colors['blue'], rect)
+                    self.screen.blit(goal_image, (j * block_size, i * block_size))
                     label = self.font.render('G', True, self.colors['white'])
-                    self.screen.blit(label, (j * block_size + 40, i * block_size + 40))
+                    
                 elif (i, j) in self.hole_positions:
-                    pygame.draw.rect(self.screen, self.colors['red'], rect)
+                    self.screen.blit(hole_image, (j * block_size, i * block_size))
                     label = self.font.render('H', True, self.colors['white'])
-                    self.screen.blit(label, (j * block_size + 40, i * block_size + 40))
+                    
                 else:
                     pygame.draw.rect(self.screen, self.colors['white'], rect)
         pygame.display.flip()
