@@ -3,7 +3,6 @@ import random
 import pygame
 import sys 
 
-from geneteic_algo_solver import GeneticAlgorithm
 
 class FrozenLake:
     
@@ -18,13 +17,28 @@ class FrozenLake:
         self.rewards = {'goal': 10, 'hole': -10, 'move': -1}
         self.game_over = False
         self.won = False
-        self.fitness = 0
-        self.best_fitness = 0
+        self.fitness = 1
+        self.best_fitness = 1
         self.slippery = slippery
         pygame.init()
         self.screen = pygame.display.set_mode((500, 500))
         self.font = pygame.font.SysFont('Arial', 20)
         self.colors = {'black': (0, 0, 0), 'white': (255, 255, 255), 'red': (255, 0, 0), 'green': (0, 255, 0), 'blue': (0, 0, 255)}
+
+    def calculate_fitness(self, gene_length_penalty: int = 1):
+        if not self.game_over:
+            self.fitness = self.player_pos[0] + self.player_pos[1] + 10 - (len(self.population) * gene_length_penalty)
+
+    def calculate_gene_fitness(self, gene: list[str]) -> int:
+        for movement in gene:
+            self.take_action(movement)
+            self.calculate_fitness()
+            if self.game_over:
+                return 1
+                self.restart()
+        fitness = self.fitness
+        self.restart()
+        return fitness
 
     def generate_hole_positions(self):
 
@@ -71,8 +85,6 @@ class FrozenLake:
                     pygame.draw.rect(self.screen, self.colors['white'], rect)
         pygame.display.flip()
 
-    def evaluate_fitness(self):
-        self.fitness =  (self.player_pos[0] + self.player_pos[1])
 
     def take_action(self, action):
         if self.game_over:
@@ -85,6 +97,18 @@ class FrozenLake:
             new_pos = (self.player_pos[0], self.player_pos[1]-1)
         elif action == 'r':
             new_pos = (self.player_pos[0], self.player_pos[1]+1)
+
+        if self.slippery and random.random() < 0.3:
+            # randomly change the intended action
+            action = random.choice([a for a in self.action_space if a != action])
+            if action == 'u':
+                new_pos = (self.player_pos[0]-1, self.player_pos[1])
+            elif action == 'd':
+                new_pos = (self.player_pos[0]+1, self.player_pos[1])
+            elif action == 'l':
+                new_pos = (self.player_pos[0], self.player_pos[1]-1)
+            elif action == 'r':
+                new_pos = (self.player_pos[0], self.player_pos[1]+1)
 
         if new_pos[0] < 0 or new_pos[0] >= self.size or new_pos[1] < 0 or new_pos[1] >= self.size:
             reward = self.rewards['move']
@@ -101,8 +125,7 @@ class FrozenLake:
         else:
             reward = self.rewards['move']
             self.player_pos = new_pos
-            self.evaluate_fitness()
-
+            self.calculate_fitness()
         return reward
 
     def play_auto_agent(self, movements):
@@ -146,7 +169,7 @@ class FrozenLake:
                         print("game over for this gene")
                         self.restart()
                         continue
-
+                breakpoint()           
                 if self.fitness > best_fitness:
                     best_fitness = self.fitness
                     best_gene = gene
@@ -203,6 +226,6 @@ class FrozenLake:
             # wait for a short time to slow down the game
             clock.tick(10)
 
-fl = FrozenLake()
-fl.solve_genetic_algorithm(5, 2)
+# fl = FrozenLake()
+# fl.solve_genetic_algorithm(5, 2)
 # #fl.play()
