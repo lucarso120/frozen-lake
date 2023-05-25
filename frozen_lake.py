@@ -8,8 +8,8 @@ player_image = load_image(f"images/student.png", size=(100, 100))
 goal_image = load_image(f"images/nova.png", size=(100, 100))
 hole_image = load_image(f"images/cat.png", size=(100, 100))
 
+
 class FrozenLake:
-    
     def __init__(self, size: int = 4, population: list =[], slippery: bool= False):
         self.size: int = size
         self.population: int = population
@@ -18,28 +18,17 @@ class FrozenLake:
         self.goal_pos = (self.size-1, self.size-1)
         self.hole_positions = self.generate_hole_positions()
         self.action_space = ['u', 'd', 'l', 'r']
-        self.rewards = {'goal': 10, 'hole': -10, 'move': -1}
+        self.rewards = {'goal': 10, 'hole': -10, 'move': 0, "out-of-bounds": -0.2}
+        self.total_reward = 0.0
         self.game_over = False
         self.won = False
-        self.fitness = 1
-        self.best_fitness = 1
+        self.fitness = 0
+        self.best_fitness = 0
         self.slippery = slippery
         pygame.init()
         self.screen = pygame.display.set_mode((500, 500))
         self.font = pygame.font.SysFont('Arial', 20)
         self.colors = {'black': (0, 0, 0), 'white': (255, 255, 255), 'red': (255, 0, 0), 'green': (0, 255, 0), 'blue': (0, 0, 255)}
-
-    def calculate_fitness(self, gene, gene_length_penalty: int = 0.5):
-        if not self.game_over:
-            self.fitness = self.player_pos[0] + self.player_pos[1] +1
-
-    def calculate_gene_fitness(self, gene: list[str]) -> int:
-        for movement in gene:
-            self.take_action(movement)
-            if self.game_over:
-                return 1
-        fitness = self.calculate_fitness(gene)
-        return fitness
 
     def generate_hole_positions(self):
 
@@ -60,7 +49,7 @@ class FrozenLake:
         for i in range(self.size):
             for j in range(self.size):
                 if (i,j) not in artificial_path and (i,j) not in artificial_path:
-                    if random.random() > 0.3:
+                    if random.random() < 0.4:
                         hole_positions.append((i,j))
         return hole_positions
 
@@ -76,11 +65,11 @@ class FrozenLake:
                 elif self.goal_pos == (i, j):
                     self.screen.blit(goal_image, (j * block_size, i * block_size))
                     label = self.font.render('G', True, self.colors['white'])
-                    
+
                 elif (i, j) in self.hole_positions:
                     self.screen.blit(hole_image, (j * block_size, i * block_size))
                     label = self.font.render('H', True, self.colors['white'])
-                    
+
                 else:
                     pygame.draw.rect(self.screen, self.colors['white'], rect)
         pygame.display.flip()
@@ -111,21 +100,21 @@ class FrozenLake:
                 new_pos = (self.player_pos[0], self.player_pos[1]+1)
 
         if new_pos[0] < 0 or new_pos[0] >= self.size or new_pos[1] < 0 or new_pos[1] >= self.size:
-            reward = self.rewards['move']
+            self.total_reward = self.rewards['out-of-bounds']  # assign negative reward for out of board move
         elif new_pos == self.goal_pos:
-            reward = self.rewards['goal']
+            self.total_reward = self.rewards['goal']
             self.game_over = True
             self.won = True
             print('you won')
         elif new_pos in self.hole_positions:
-            reward = self.rewards['hole']
+            self.total_reward = self.rewards['hole']
             self.game_over = True
             self.fitness = 0
             print('Game Over')
         else:
-            reward = self.rewards['move']
+            self.total_reward = self.rewards['move']
             self.player_pos = new_pos
-        return reward
+
 
     def play_auto_agent(self, movements):
 
@@ -140,7 +129,6 @@ class FrozenLake:
                 pygame.time.wait(500)
                 pygame.quit()
                 sys.exit()
-        self.calculate_fitness(movements)
 
     def restart(self):
         self.game_over = False
@@ -164,16 +152,16 @@ class FrozenLake:
                     self.take_action(movement)
                     pygame.display.update()
                     pygame.time.wait(100)
-                    
+
                     if self.game_over:
                         print("game over for this gene")
                         self.restart()
                         continue
-                breakpoint()           
+                breakpoint()
                 if self.fitness >= best_fitness:
                     best_fitness = self.fitness
                     best_gene = gene
-                print(f"best gene is {best_gene}")              
+                print(f"best gene is {best_gene}")
             try:
                 step_gene = best_gene.copy().tolist()
             except AttributeError:
@@ -225,7 +213,3 @@ class FrozenLake:
 
             # wait for a short time to slow down the game
             clock.tick(10)
-
-# fl = FrozenLake()
-# fl.solve_genetic_algorithm(5, 2)
-# #fl.play()
