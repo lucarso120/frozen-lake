@@ -65,7 +65,7 @@ class GeneticAlgorithmSolver:
             self.frozen_lake.population = self.new_population
             self.frozen_lake.play_auto_agent(self.best_gene)
             
-
+    # this is basically elitism
     def evaluate_gene(self, gene):
         self.frozen_lake.restart()
         print(f"gene sequence: {gene}")
@@ -96,7 +96,7 @@ class GeneticAlgorithmSolver:
             return best_gene.copy().tolist()
         except AttributeError:
             return best_gene.copy()
-
+    # here we implement mutation. We can apply crossover as well...
     def generate_new_population(self, step_gene):
         for _ in range(self.population_size):
             if random.random() < 0.2 :
@@ -114,6 +114,6 @@ class GeneticAlgorithmSolver:
                 new_gene.append(random.choice(self.frozen_lake.action_space))
             self.new_population.append(new_gene)
 
-fl = FrozenLake() 
+fl = FrozenLake(slippery=False) 
 solver = GeneticAlgorithmSolver(fl, population_size=5, gene_length=2) 
 solver.solve()

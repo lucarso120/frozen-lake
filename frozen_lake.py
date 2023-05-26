@@ -10,7 +10,7 @@ hole_image = load_image(f"images/cat.png", size=(100, 100))
 
 
 class FrozenLake:
-    def __init__(self, size: int = 4, population: list =[], slippery: bool= False):
+    def __init__(self, size: int = 5, population: list =[], slippery: bool= False):
         self.size: int = size
         self.population: int = population
         self.board = np.zeros((size, size))
@@ -29,7 +29,12 @@ class FrozenLake:
         self.screen = pygame.display.set_mode((500, 500))
         self.font = pygame.font.SysFont('Arial', 20)
         self.colors = {'black': (0, 0, 0), 'white': (255, 255, 255), 'red': (255, 0, 0), 'green': (0, 255, 0), 'blue': (0, 0, 255)}
-
+        self.ACTIONS = {
+                    'u': (-1, 0),
+                    'd': (1, 0),
+                    'l': (0, -1),
+                    'r': (0, 1),
+                }
     def generate_hole_positions(self):
 
         artificial_path = [(0,0), self.goal_pos]
@@ -77,27 +82,12 @@ class FrozenLake:
 
     def take_action(self, action):
         if self.game_over:
-            self.player_pos = (0,0)
-        if action == 'u':
-            new_pos = (self.player_pos[0]-1, self.player_pos[1])
-        elif action == 'd':
-            new_pos = (self.player_pos[0]+1, self.player_pos[1])
-        elif action == 'l':
-            new_pos = (self.player_pos[0], self.player_pos[1]-1)
-        elif action == 'r':
-            new_pos = (self.player_pos[0], self.player_pos[1]+1)
+            self.player_pos = (0, 0)
+        new_pos = (self.player_pos[0] + self.ACTIONS[action][0], self.player_pos[1] + self.ACTIONS[action][1])
 
         if self.slippery and random.random() < 0.3:
-            # randomly change the intended action
             action = random.choice([a for a in self.action_space if a != action])
-            if action == 'u':
-                new_pos = (self.player_pos[0]-1, self.player_pos[1])
-            elif action == 'd':
-                new_pos = (self.player_pos[0]+1, self.player_pos[1])
-            elif action == 'l':
-                new_pos = (self.player_pos[0], self.player_pos[1]-1)
-            elif action == 'r':
-                new_pos = (self.player_pos[0], self.player_pos[1]+1)
+            new_pos = (self.player_pos[0] + self.ACTIONS[action][0], self.player_pos[1] + self.ACTIONS[action][1])
 
         if new_pos[0] < 0 or new_pos[0] >= self.size or new_pos[1] < 0 or new_pos[1] >= self.size:
             self.total_reward = self.rewards['out-of-bounds']  # assign negative reward for out of board move
@@ -134,48 +124,6 @@ class FrozenLake:
         self.game_over = False
         self.won = False
         self.player_pos = (0, 0)
-
-    def solve_genetic_algorithm(self, population_size, gene_length):
-        ga = GeneticAlgorithm(population_size, gene_length, self.action_space)
-        self.population = ga.initialize_population()
-        best_fitness = 0
-        best_gene = []
-
-        while not self.won:
-            new_population = []
-            # Evaluate fitness for each gene in the population
-            for gene in self.population:
-                self.restart()
-                print(f"gene sequence: {gene}")
-                for movement in gene:
-                    self.render()
-                    self.take_action(movement)
-                    pygame.display.update()
-                    pygame.time.wait(100)
-
-                    if self.game_over:
-                        print("game over for this gene")
-                        self.restart()
-                        continue
-                breakpoint()
-                if self.fitness >= best_fitness:
-                    best_fitness = self.fitness
-                    best_gene = gene
-                print(f"best gene is {best_gene}")
-            try:
-                step_gene = best_gene.copy().tolist()
-            except AttributeError:
-                step_gene = best_gene.copy()
-
-            for _ in range(population_size):
-                new_gene = step_gene.copy()
-                for _ in range(gene_length):
-                    new_gene.append(random.choice(self.action_space))
-                new_population.append(new_gene)
-            self.population = new_population
-
-            # Update game state using the best gene
-            self.play_auto_agent(best_gene)
 
 
     def play(self, auto_agent=False):
