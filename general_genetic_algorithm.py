@@ -13,6 +13,7 @@ class GeneticAlgorithm:
         self.population_size: int = population_size
         self.gene_length: int = gene_length
         self.frozen_lake: FrozenLake = frozen_lake
+        self.population = []
         self.new_population = []
         self.best_gene = []
         self.last_best_gene = []
@@ -33,6 +34,7 @@ class GeneticAlgorithm:
                 self.best_gene = self.best_gene[:-1]
                 print("deleted the last element of the best_gene due to repetitive genes policy")
 
+    @abc.abstractmethod
     def calculate_fitness(self, gene, gene_length_penalty: int = 0.5, opposite_actions_penalty: int = 0.6):
         if not self.frozen_lake.game_over:
             distance_to_goal = abs(self.frozen_lake.player_pos[0] - self.frozen_lake.goal_pos[0]) + abs(self.frozen_lake.player_pos[1] - self.frozen_lake.goal_pos[1])
@@ -53,9 +55,10 @@ class GeneticAlgorithm:
         return self.frozen_lake.fitness
         
     def initialize_population(self):
+        down_right_prob = [0.4, 0.4, 0.1, 0.1]  # Probabilities for [down, right, up, left]
         population = []
         for i in range(self.population_size):
-            gene = np.random.choice(self.frozen_lake.action_space, size=self.gene_length)
+            gene = np.random.choice(self.frozen_lake.action_space, size=self.gene_length, p=down_right_prob)
             population.append(gene)
         return population
 
@@ -94,7 +97,10 @@ class GeneticAlgorithm:
         """
         Perform crossover between two parents to create a child gene.
         """
-        crossover_point = np.random.randint(1, self.gene_length - 1)
+        try:
+            crossover_point = np.random.randint(1, self.gene_length - 1)
+        except ValueError:
+            crossover_point = 1
         child = np.concatenate((parent1[:crossover_point], parent2[crossover_point:]))
         return child
 

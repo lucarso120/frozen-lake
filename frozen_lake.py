@@ -17,7 +17,7 @@ class FrozenLake:
         self.player_pos = (0, 0)
         self.goal_pos = (self.size-1, self.size-1)
         self.hole_positions = self.generate_hole_positions()
-        self.action_space = ['u', 'd', 'l', 'r']
+        self.action_space = ['d', 'r', 'u', 'l']
         self.rewards = {'goal': 100, 'hole': -10, 'move': 0, "out-of-bounds": -0.2}
         self.total_reward = 0.0
         self.game_over = False
@@ -112,7 +112,7 @@ class FrozenLake:
             self.render()
             pygame.display.update()
             reward = self.take_action(mov)
-            pygame.time.wait(100)
+            pygame.time.wait(10)
 
             if self.won:
                 print('Yay')

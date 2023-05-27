@@ -8,8 +8,11 @@ from objects import Gene, AlgorithmStats
 
 class GeneticAlgorithmSolver(GeneticAlgorithm):
     """
-    This implementation takes an unpralled approach. Instead of using several agent ssimultaneously,
-    we find the best gene, once at a time, and then we generate a new population based on it.
+    For this implementation, we base our approach on elitism, where we keep the best gene from the population.
+    However, instead of using a full lenght gene, we increase its size at each generation.
+    This approach, which we can refer to as complexity increase, allows us to find the best gene faster.
+    Additionally, we add a random factor to the gene length, in order to create diversity.
+
     """
 
     def solve(self):
@@ -30,18 +33,21 @@ class GeneticAlgorithmSolver(GeneticAlgorithm):
     def generate_new_population(self, step_gene):
         """
         Generate a new population based on the best gene.
-        We ad a random factor to the gene length, in order to create diversity
+        We add a random factor to the gene length, in order to create diversity
         """
+        down_right_prob = [0.4, 0.4, 0.1, 0.1]  # Probabilities for [down, right, up, left]
         for _ in range(self.population_size):
             new_gene = self.mutate(step_gene.copy())
             for _ in range(self.gene_length - 1):
-                new_gene.append(random.choice(self.frozen_lake.action_space))
-            if random.random() < 0.3:
+                if len(new_gene) < self.gene_length:
+                    new_move = np.random.choice(self.frozen_lake.action_space, p=down_right_prob)
+                    new_gene.append(new_move)
+            if random.random() < 0.5:
                 new_gene.append(random.choice(self.frozen_lake.action_space))
             if random.random() < 0.2:
                 new_gene.append(random.choice(self.frozen_lake.action_space))
             self.new_population.append(new_gene)
-    
+            
     def evaluate_gene(self, gene):
         """
         Evaluate the gene by playing the game with it, and calculating the fitness.
