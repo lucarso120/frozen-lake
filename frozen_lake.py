@@ -10,7 +10,7 @@ hole_image = load_image(f"images/cat.png", size=(100, 100))
 
 
 class FrozenLake:
-    def __init__(self, size: int = 5, population: list =[], slippery: bool= False):
+    def __init__(self, size: int = 4, population: list =[], slippery: bool= False):
         self.size: int = size
         self.population: int = population
         self.board = np.zeros((size, size))
@@ -18,7 +18,7 @@ class FrozenLake:
         self.goal_pos = (self.size-1, self.size-1)
         self.hole_positions = self.generate_hole_positions()
         self.action_space = ['u', 'd', 'l', 'r']
-        self.rewards = {'goal': 10, 'hole': -10, 'move': 0, "out-of-bounds": -0.2}
+        self.rewards = {'goal': 100, 'hole': -10, 'move': 0, "out-of-bounds": -0.2}
         self.total_reward = 0.0
         self.game_over = False
         self.won = False
@@ -54,7 +54,7 @@ class FrozenLake:
         for i in range(self.size):
             for j in range(self.size):
                 if (i,j) not in artificial_path and (i,j) not in artificial_path:
-                    if random.random() < 0.4:
+                    if random.random() < 0.3:
                         hole_positions.append((i,j))
         return hole_positions
 
@@ -90,19 +90,19 @@ class FrozenLake:
             new_pos = (self.player_pos[0] + self.ACTIONS[action][0], self.player_pos[1] + self.ACTIONS[action][1])
 
         if new_pos[0] < 0 or new_pos[0] >= self.size or new_pos[1] < 0 or new_pos[1] >= self.size:
-            self.total_reward = self.rewards['out-of-bounds']  # assign negative reward for out of board move
+            self.total_reward += self.rewards['out-of-bounds']  # assign negative reward for out of board move
         elif new_pos == self.goal_pos:
-            self.total_reward = self.rewards['goal']
+            self.total_reward += self.rewards['goal']
             self.game_over = True
             self.won = True
             print('you won')
         elif new_pos in self.hole_positions:
-            self.total_reward = self.rewards['hole']
+            self.total_reward += self.rewards['hole']
             self.game_over = True
             self.fitness = 0
             print('Game Over')
         else:
-            self.total_reward = self.rewards['move']
+            self.total_reward += self.rewards['move']
             self.player_pos = new_pos
 
 
@@ -124,6 +124,7 @@ class FrozenLake:
         self.game_over = False
         self.won = False
         self.player_pos = (0, 0)
+        self.total_reward = 0.0
 
 
     def play(self, auto_agent=False):
