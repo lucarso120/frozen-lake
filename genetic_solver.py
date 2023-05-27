@@ -2,7 +2,7 @@ import numpy as np
 import pygame
 import random
 from frozen_lake import FrozenLake
-from general_genetic_solver import GeneticAlgorithm
+from general_genetic_algorithm import GeneticAlgorithm
 from objects import Gene, AlgorithmStats
 
 
