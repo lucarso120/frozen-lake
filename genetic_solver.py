@@ -15,6 +15,9 @@ class GeneticAlgorithmSolver(GeneticAlgorithm):
     Additionally, we add a random factor to the gene length, in order to create diversity.
 
     """
+    def __init__(self, frozen_lake, population_size, gene_length, mutation_method):
+        super().__init__(frozen_lake, population_size, gene_length, mutation_method)
+        self.mutation_method = mutation_method
 
     def solve_illustrate(self):
         self.population = self.initialize_population()

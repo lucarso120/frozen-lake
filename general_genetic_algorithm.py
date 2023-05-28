@@ -14,7 +14,8 @@ from objects import Gene, AlgorithmStats
 
 class GeneticAlgorithm:
     def __init__(self, frozen_lake: FrozenLake,
-        population_size: int, gene_length: int):
+        population_size: int, gene_length: int,
+        mutation_method =None):
         self.population_size: int = population_size
         self.gene_length: int = gene_length
         self.frozen_lake: FrozenLake = frozen_lake
@@ -26,6 +27,7 @@ class GeneticAlgorithm:
         self.elite_size = 0.2
         self.generation = 0
         self.stats = AlgorithmStats([], 0)
+        self.mutation_method = mutation_method
 
     def avoid_repetitive_gene(self, gene):
         """ 
@@ -48,8 +50,7 @@ class GeneticAlgorithm:
                 self.best_gene = self.best_gene[:-1]
                 logging.info("deleted the last element of the best_gene due to repetitive genes policy")
 
-    @abc.abstractmethod
-    def calculate_fitness(self, gene, gene_length_penalty: int = 0.1, opposite_actions_penalty: int = 0.8):
+    def calculate_fitness(self, gene, opposite_actions_penalty: int = 0.8):
         """
         This function calculates the fitness of a gene.
         Our fitness function is the total reward divided by the distance to the goal.
@@ -57,7 +58,9 @@ class GeneticAlgorithm:
         """
 
         if not self.frozen_lake.game_over:
-            distance_to_goal = abs(self.frozen_lake.player_pos[0] - self.frozen_lake.goal_pos[0]) + abs(self.frozen_lake.player_pos[1] - self.frozen_lake.goal_pos[1])
+            distance_to_goal = (
+                abs(self.frozen_lake.player_pos[0] - self.frozen_lake.goal_pos[0]) 
+                + abs(self.frozen_lake.player_pos[1] - self.frozen_lake.goal_pos[1]))
             self.frozen_lake.fitness = self.frozen_lake.total_reward / (distance_to_goal + 1) 
             opposite_actions = {'u': 'd', 'd': 'u', 'l': 'r', 'r': 'l'}
             for i in range(len(gene)-1):
@@ -113,18 +116,36 @@ class GeneticAlgorithm:
         except AttributeError:
             return best_gene.copy()
 
+
     def mutate(self, gene):
         """
-        Mutate the gene by changing one of the existing actions
-        This should be called for the best gene, in order to create mutations on
-        about 20% of the population
+        Mutate the gene based on the specified method. If no method is specified,
+        replace one of the existing actions at random.
         """
-        if random.random() < 0.1:
+        if self.mutation_method == "swap":
             try:
-                gene[random.randint(0, self.gene_length - 1)] = random.choice(self.frozen_lake.action_space)
+                index1 = random.randint(0, self.gene_length - 1)
+                index2 = random.randint(0, self.gene_length - 1)
+                gene[index1], gene[index2] = gene[index2], gene[index1]
             except IndexError:
-                pass
+                return gene
+            
+        elif self.mutation_method == "scramble":
+            start = random.randint(0, self.gene_length - 1)
+            end = random.randint(start, self.gene_length)
+            subset = gene[start:end]
+            random.shuffle(subset)
+            gene[start:end] = subset
+            
+        else:  # Default mutation method
+            if random.random() < 0.1:
+                try:
+                    gene[random.randint(0, self.gene_length - 1)] = random.choice(self.frozen_lake.action_space)
+                except IndexError:
+                    pass
+                    
         return gene
+
 
     def crossover(self, parent1, parent2):
         """

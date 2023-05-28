@@ -64,7 +64,7 @@ class FrozenLake:
         for i in range(self.size):
             for j in range(self.size):
                 if (i,j) not in artificial_path and (i,j) not in artificial_path:
-                    if random.random() < 0.3:
+                    if random.random() < 0.5:
                         hole_positions.append((i,j))
         return hole_positions
 

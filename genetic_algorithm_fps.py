@@ -13,9 +13,9 @@ class GeneticAlgorithmSolverFPS(GeneticAlgorithm):
     """
     In this implementation, we use FPS selection method to select the parents.
     """
-    def __init__(self, frozen_lake, population_size, gene_length):
-        super().__init__(frozen_lake, population_size, gene_length)
-        self.frozen_lake.rewards = {'goal': 100, 'hole': -10, 'move': 1, "out-of-bounds": -0.2}
+    def __init__(self, frozen_lake, population_size, gene_length, mutation_method):
+        super().__init__(frozen_lake, population_size, gene_length, mutation_method)
+        self.mutation_method = mutation_method
 
     def calculate_fitness(self, gene, gene_length_penalty: int = 0.5, opposite_actions_penalty: int = 0.6):
         self.frozen_lake.fitness = self.frozen_lake.total_reward
