@@ -1,3 +1,9 @@
+"""
+This is our implementation of the frozen lake game. 
+it contains all major functions and variables needed to play the game.
+It also contains methods to handle automatic playing of the game, and to render the game for a human user
+"""
+
 import numpy as np
 import random
 import pygame
@@ -36,6 +42,10 @@ class FrozenLake:
                     'r': (0, 1),
                 }
     def generate_hole_positions(self):
+        """ 
+        This method generates the hole positions for the game.
+        It generates a path from the start to the goal, and then randomly places holes on the board
+        """
 
         artificial_path = [(0,0), self.goal_pos]
         current_pos = (0,0)
@@ -59,6 +69,9 @@ class FrozenLake:
         return hole_positions
 
     def render(self):
+        """
+        This method renders the game visuals
+        """
         block_size = 100
         for i in range(self.size):
             for j in range(self.size):
@@ -81,6 +94,10 @@ class FrozenLake:
 
 
     def take_action(self, action):
+        """
+        This method takes an action and updates the game state accordingly
+        """
+
         if self.game_over:
             self.player_pos = (0, 0)
         new_pos = (self.player_pos[0] + self.ACTIONS[action][0], self.player_pos[1] + self.ACTIONS[action][1])
@@ -104,6 +121,9 @@ class FrozenLake:
 
 
     def play_auto_agent(self, movements):
+        """
+        This method plays the game using the movements provided by the Auto agent
+        """
 
         for mov in movements:
             self.render()
@@ -125,6 +145,9 @@ class FrozenLake:
 
 
     def play(self, auto_agent=False):
+        """
+        This method plays the game as a human player
+        """
         clock = pygame.time.Clock()
         while not self.game_over:
             for event in pygame.event.get():

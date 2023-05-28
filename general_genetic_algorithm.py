@@ -1,3 +1,8 @@
+"""
+This file contains the implementation of the general genetic algorithm.
+It holds the abstarct and general functions to all other implementatios
+"""
+
 import numpy as np
 import pygame
 import random
@@ -23,6 +28,11 @@ class GeneticAlgorithm:
         self.stats = AlgorithmStats([], 0)
 
     def avoid_repetitive_gene(self, gene):
+        """ 
+        This function is used to avoid repetitive genes in the best_gene list.
+        After 50 repetitive genes, the last element of the best_gene list is deleted.
+        This should prevent the persistence of genes stuck in local minimums.
+        """
         if np.array_equal(self.last_best_gene, np.array([])):
             self.last_best_gene = gene
         else:
@@ -40,6 +50,12 @@ class GeneticAlgorithm:
 
     @abc.abstractmethod
     def calculate_fitness(self, gene, gene_length_penalty: int = 0.1, opposite_actions_penalty: int = 0.8):
+        """
+        This function calculates the fitness of a gene.
+        Our fitness function is the total reward divided by the distance to the goal.
+        We also penalize the gene length and opposite actions.
+        """
+
         if not self.frozen_lake.game_over:
             distance_to_goal = abs(self.frozen_lake.player_pos[0] - self.frozen_lake.goal_pos[0]) + abs(self.frozen_lake.player_pos[1] - self.frozen_lake.goal_pos[1])
             self.frozen_lake.fitness = self.frozen_lake.total_reward / (distance_to_goal + 1) 
@@ -49,6 +65,10 @@ class GeneticAlgorithm:
                     self.frozen_lake.fitness -= opposite_actions_penalty
 
     def calculate_gene_fitness(self, gene: list[str]) -> int:
+        """ 
+        This methods calls the calculate_fitness method and returns the fitness of the gene.
+        We use this function due to the issue of having to process the player moves
+        """
         for movement in gene:
             self.frozen_lake.take_action(movement)
             if self.frozen_lake.game_over:
@@ -57,7 +77,11 @@ class GeneticAlgorithm:
         return self.frozen_lake.fitness
         
     def initialize_population(self):
-        down_right_prob = [0.3, 0.3, 0.2, 0.2]  # Probabilities for [down, right, up, left]
+        """
+        Initialize the population with random genes.
+        Makes it possible to adapt the probability of each action.
+        """
+        down_right_prob = [0.25, 0.25, 0.25, 0.25]  # Probabilities for [down, right, up, left]
         population = []
         for i in range(self.population_size):
             gene = np.random.choice(self.frozen_lake.action_space, size=self.gene_length, p=down_right_prob)
@@ -66,6 +90,9 @@ class GeneticAlgorithm:
 
     @abc.abstractmethod
     def solve(self):
+        """
+        Solve the problem using the genetic algorithm.
+        """
         pass
     
     @abc.abstractmethod
@@ -77,6 +104,10 @@ class GeneticAlgorithm:
         pass
 
     def get_step_gene(self, best_gene):
+        """
+        This is a helper function to handle the duiality of dealing with
+        np arrays and lsists
+        """
         try:
             return best_gene.copy().tolist()
         except AttributeError:
@@ -115,5 +146,8 @@ class GeneticAlgorithm:
         pass
 
     def get_algorithm_stats(self):
+        """
+        Return the algorithm stats
+        """
         self.stats = AlgorithmStats(self.best_gene, self.generation)
         

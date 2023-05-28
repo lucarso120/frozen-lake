@@ -1,3 +1,8 @@
+"""
+This module has the exact same functionality as frozen_lake.py, but it does not use pygame.
+We did this to avoid the overhead of pygame and to make the algorithm run faster.
+"""
+
 import numpy as np
 import random
 

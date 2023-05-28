@@ -17,10 +17,10 @@ def main(num_runs):
 
     for i in tqdm(range(num_runs)):
         # create a new game for every trial
-        frozen_lake_game = FrozenLakeRaw()
+        frozen_lake_game = FrozenLakeRaw(slippery=True)
         genetic_algorithm_solver = GeneticAlgorithmSolver(frozen_lake_game, population_size=10, gene_length=3)
-        genetic_algorithm_fps = GeneticAlgorithmSolverFPS(frozen_lake_game, population_size=10, gene_length=8)
-        genetic_algorithm_tournament = GeneticAlgorithmSolverTournament(frozen_lake_game, population_size=10, gene_length=8)
+        genetic_algorithm_fps = GeneticAlgorithmSolverFPS(frozen_lake_game, population_size=10, gene_length=10)
+        genetic_algorithm_tournament = GeneticAlgorithmSolverTournament(frozen_lake_game, population_size=10, gene_length=10)
 
         genetic_algorithm_solver.solve()
         solver_generations.append(genetic_algorithm_solver.stats.generation)
