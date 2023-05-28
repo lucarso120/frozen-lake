@@ -1,6 +1,7 @@
 import numpy as np
 import pygame
 import random
+import sys
 from frozen_lake import FrozenLake
 from general_genetic_algorithm import GeneticAlgorithm
 from objects import Gene, AlgorithmStats
@@ -13,7 +14,7 @@ class GeneticAlgorithmSolverTournament(GeneticAlgorithm):
 
     def __init__(self, frozen_lake, population_size, gene_length):
         super().__init__(frozen_lake, population_size, gene_length)
-        self.frozen_lake.rewards = {'goal': 100, 'hole': -10, 'move': 1, "out-of-bounds": -0.2}
+        self.frozen_lake.rewards = {'goal': 100, 'hole': -5, 'move': 1, "out-of-bounds": -1}
 
     def calculate_fitness(self, gene, gene_length_penalty: int = 0.5, opposite_actions_penalty: int = 0.6):
         self.frozen_lake.fitness = self.frozen_lake.total_reward
@@ -21,6 +22,25 @@ class GeneticAlgorithmSolverTournament(GeneticAlgorithm):
         for i in range(len(gene)-1):
             if gene[i+1] == opposite_actions[gene[i]]:
                 self.frozen_lake.fitness -= opposite_actions_penalty
+
+    def mutate(self, gene):
+        """
+        Mutate the gene by changing one of the existing actions
+        This should be called for the best gene, in order to create mutations on
+        about 20% of the population
+        """
+        if random.random() < 0.5:
+            try:
+                gene[random.randint(0, self.gene_length - 1)] = random.choice(self.frozen_lake.action_space)
+            except IndexError:
+                pass
+        return gene
+
+    def calculate_gene_fitness(self, gene: list[str]) -> int:
+        for movement in gene:
+            self.frozen_lake.take_action(movement)
+        self.calculate_fitness(gene)
+        return self.frozen_lake.fitness
 
     def tournament_selection(self, fitness_list):
         selected_indices = []
@@ -47,21 +67,41 @@ class GeneticAlgorithmSolverTournament(GeneticAlgorithm):
 
         self.population = new_population
 
-    def solve(self):
+    def solve_illustrate(self):
         self.population = self.initialize_population()
         while not self.frozen_lake.won:
+            self.generation += 1
             for gene in self.population:
                 print(Gene(self.frozen_lake.fitness, gene))
-                self.frozen_lake.play_auto_agent(gene)
                 for movement in gene:
-                    if self.frozen_lake.game_over:
-                        continue
+                    self.frozen_lake.render()
+                    pygame.display.update()
+                    reward = self.frozen_lake.take_action(movement)
+                    pygame.time.wait(10)
                     if self.frozen_lake.won:
-                        break
                         print("Won")
+                        self.best_gene = gene
+                        self.get_algorithm_stats()
+                        print(self.stats)
+                        pygame.quit()
+                        sys.exit()
                 self.frozen_lake.restart()
             self.generate_new_population()
 
-fl = FrozenLake(slippery=False) 
-solver = GeneticAlgorithmSolverTournament(fl, population_size=10, gene_length=10) 
-solver.solve()
+    def solve(self):
+        self.population = self.initialize_population()
+        while not self.frozen_lake.won:
+            self.generation += 1
+            for gene in self.population:
+                for movement in gene:
+                    reward = self.frozen_lake.take_action(movement)
+                    if self.frozen_lake.won:
+                        self.best_gene = gene
+                        self.get_algorithm_stats()
+                        return
+                self.frozen_lake.restart()
+            self.generate_new_population()
+
+#fl = FrozenLake(slippery=False) 
+#solver = GeneticAlgorithmSolverTournament(fl, population_size=10, gene_length=10) 
+#solver.solve_illustrate()

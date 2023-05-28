@@ -19,6 +19,7 @@ class GeneticAlgorithm:
         self.last_best_gene = []
         self.buffer = 0
         self.elite_size = 0.2
+        self.generation = 0
         self.stats = AlgorithmStats([], 0)
 
     def avoid_repetitive_gene(self, gene):
@@ -55,7 +56,7 @@ class GeneticAlgorithm:
         return self.frozen_lake.fitness
         
     def initialize_population(self):
-        down_right_prob = [0.4, 0.4, 0.1, 0.1]  # Probabilities for [down, right, up, left]
+        down_right_prob = [0.3, 0.3, 0.2, 0.2]  # Probabilities for [down, right, up, left]
         population = []
         for i in range(self.population_size):
             gene = np.random.choice(self.frozen_lake.action_space, size=self.gene_length, p=down_right_prob)
@@ -111,3 +112,7 @@ class GeneticAlgorithm:
         We ad a random factor to the gene length, in order to create diversity
         """
         pass
+
+    def get_algorithm_stats(self):
+        self.stats = AlgorithmStats(self.best_gene, self.generation)
+        

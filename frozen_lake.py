@@ -91,7 +91,7 @@ class FrozenLake:
 
         if new_pos[0] < 0 or new_pos[0] >= self.size or new_pos[1] < 0 or new_pos[1] >= self.size:
             self.total_reward += self.rewards['out-of-bounds']  # assign negative reward for out of board move
-        elif new_pos == self.goal_pos:
+        elif new_pos == self.goal_pos and not self.game_over:
             self.total_reward += self.rewards['goal']
             self.game_over = True
             self.won = True

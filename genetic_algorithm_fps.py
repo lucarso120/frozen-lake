@@ -7,7 +7,7 @@ import random
 from frozen_lake import FrozenLake
 from general_genetic_algorithm import GeneticAlgorithm
 from objects import Gene, AlgorithmStats
-
+import sys
 
 class GeneticAlgorithmSolverFPS(GeneticAlgorithm):
     """
@@ -52,21 +52,41 @@ class GeneticAlgorithmSolverFPS(GeneticAlgorithm):
         self.population = new_population
     
 
-    def solve(self):
+    def solve_illustrate(self):
         self.population = self.initialize_population()
         while not self.frozen_lake.won:
+            self.generation += 1
             for gene in self.population:
                 print(Gene(self.frozen_lake.fitness, gene))
-                self.frozen_lake.play_auto_agent(gene)
                 for movement in gene:
-                    if self.frozen_lake.game_over:
-                        continue
+                    self.frozen_lake.render()
+                    pygame.display.update()
+                    reward = self.frozen_lake.take_action(movement)
+                    pygame.time.wait(10)
                     if self.frozen_lake.won:
-                        break
                         print("Won")
+                        self.best_gene = gene
+                        self.get_algorithm_stats()
+                        print(self.stats)
+                        pygame.quit()
+                        sys.exit()
                 self.frozen_lake.restart()
             self.generate_new_population()
 
-fl = FrozenLake(slippery=False) 
-solver = GeneticAlgorithmSolverFPS(fl, population_size=5, gene_length=10) 
-solver.solve()
+    def solve(self):
+        self.population = self.initialize_population()
+        while not self.frozen_lake.won:
+            self.generation += 1
+            for gene in self.population:
+                for movement in gene:
+                    reward = self.frozen_lake.take_action(movement)
+                    if self.frozen_lake.won:
+                        self.best_gene = gene
+                        self.get_algorithm_stats()
+                        return
+                self.frozen_lake.restart()
+            self.generate_new_population()
+            
+#fl = FrozenLake(slippery=False) 
+#solver = GeneticAlgorithmSolverFPS(fl, population_size=5, gene_length=10) 
+#solver.solve_illustrate()

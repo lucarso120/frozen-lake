@@ -85,6 +85,6 @@ class GeneticAlgorithmSolver(GeneticAlgorithm):
             self.avoid_repetitive_gene(self.best_gene)
 
 
-fl = FrozenLake(slippery=False) 
-solver = GeneticAlgorithmSolver(fl, population_size=5, gene_length=3) 
-solver.solve()
+#fl = FrozenLake(slippery=False) 
+#solver = GeneticAlgorithmSolver(fl, population_size=5, gene_length=3) 
+#solver.solve()
