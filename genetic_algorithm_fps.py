@@ -25,12 +25,13 @@ class GeneticAlgorithmSolverFPS(GeneticAlgorithm):
                 self.frozen_lake.fitness -= opposite_actions_penalty
 
     def fps_selection(self, fitness_list):
+        # in fitness_list, if fitness is negative, we make it zero
+        fitness_list = [fitness if fitness > 0 else 0 for fitness in fitness_list]
         total_fitness = sum(fitness_list)
         if total_fitness == 0:
             probabilities = [1 / len(fitness_list) for fitness in fitness_list]
         else:
             probabilities = [fitness / total_fitness for fitness in fitness_list]
-        
         indices = np.random.choice(range(len(self.population)), size=round(self.population_size/2), p=probabilities)
         return indices
 
@@ -44,11 +45,12 @@ class GeneticAlgorithmSolverFPS(GeneticAlgorithm):
         selected_indices = self.fps_selection(fitness_list)
 
         new_population = []
-        parent1_index, parent2_index = np.random.choice(selected_indices, size=2, replace=False)
-        parent1, parent2 = self.population[parent1_index], self.population[parent2_index]
-        child = self.crossover(parent1, parent2)
-        child = self.mutate(child)
-        new_population.append(child.tolist())
+        for _ in range(self.population_size):
+            parent1_index, parent2_index = np.random.choice(selected_indices, size=2, replace=False)
+            parent1, parent2 = self.population[parent1_index], self.population[parent2_index]
+            child = self.crossover(parent1, parent2)
+            child = self.mutate(child)
+            new_population.append(child.tolist())
         self.population = new_population
     
 
@@ -61,10 +63,11 @@ class GeneticAlgorithmSolverFPS(GeneticAlgorithm):
                 for movement in gene:
                     self.frozen_lake.render()
                     pygame.display.update()
-                    reward = self.frozen_lake.take_action(movement)
+                    self.frozen_lake.take_action(movement)
                     pygame.time.wait(10)
                     if self.frozen_lake.won:
-                        print("Won")
+                        breakpoint()
+                        print("Stats")
                         self.best_gene = gene
                         self.get_algorithm_stats()
                         print(self.stats)
@@ -77,16 +80,19 @@ class GeneticAlgorithmSolverFPS(GeneticAlgorithm):
         self.population = self.initialize_population()
         while not self.frozen_lake.won:
             self.generation += 1
+            if self.generation > 100:
+                self.get_algorithm_stats()
+                return
             for gene in self.population:
                 for movement in gene:
-                    reward = self.frozen_lake.take_action(movement)
+                    self.frozen_lake.take_action(movement)
                     if self.frozen_lake.won:
                         self.best_gene = gene
                         self.get_algorithm_stats()
                         return
                 self.frozen_lake.restart()
             self.generate_new_population()
-            
+
 #fl = FrozenLake(slippery=False) 
-#solver = GeneticAlgorithmSolverFPS(fl, population_size=5, gene_length=10) 
+#solver = GeneticAlgorithmSolverFPS(fl, population_size=10, gene_length=10) 
 #solver.solve_illustrate()

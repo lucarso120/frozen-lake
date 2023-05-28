@@ -1,6 +1,7 @@
 import numpy as np
 import pygame
 import random
+import sys
 from frozen_lake import FrozenLake
 from general_genetic_algorithm import GeneticAlgorithm
 from objects import Gene, AlgorithmStats
@@ -15,19 +16,34 @@ class GeneticAlgorithmSolver(GeneticAlgorithm):
 
     """
 
-    def solve(self):
-        self.frozen_lake.population = self.initialize_population()
+    def solve_illustrate(self):
+        self.population = self.initialize_population()
         while not self.frozen_lake.won:
-            self.stats.generation += 1
-            for gene in self.frozen_lake.population:
-                self.evaluate_gene(gene)
-                self.stats.total_number_of_genes += 1
-            
+            self.generation += 1
+            for gene in self.population:
+                print(Gene(self.frozen_lake.fitness, gene))
+                self.evaluate_gene_illustrate(gene)
+                self.frozen_lake.restart()
             step_gene = self.get_step_gene(self.best_gene)
             self.generate_new_population(step_gene)
 
-            self.frozen_lake.population = self.new_population
-            self.frozen_lake.play_auto_agent(self.best_gene)
+    def solve(self):
+        self.population = self.initialize_population()
+        while not self.frozen_lake.won:
+            self.generation += 1
+            if self.generation > 100:
+                self.get_algorithm_stats()
+                return
+            for gene in self.population:
+                self.evaluate_gene(gene)
+                if not self.frozen_lake.won:
+                    self.frozen_lake.restart()
+                else:
+                    self.best_gene = gene
+                    self.get_algorithm_stats()
+                    return
+            step_gene = self.get_step_gene(self.best_gene)
+            self.generate_new_population(step_gene)
 
 
     def generate_new_population(self, step_gene):
@@ -35,10 +51,11 @@ class GeneticAlgorithmSolver(GeneticAlgorithm):
         Generate a new population based on the best gene.
         We add a random factor to the gene length, in order to create diversity
         """
+        self.new_population = []
         down_right_prob = [0.4, 0.4, 0.1, 0.1]  # Probabilities for [down, right, up, left]
         for _ in range(self.population_size):
-            new_gene = self.mutate(step_gene.copy())
-            for _ in range(self.gene_length - 1):
+            new_gene = self.get_step_gene(self.mutate(step_gene.copy()))
+            for _ in range(self.gene_length):
                 if len(new_gene) < self.gene_length:
                     new_move = np.random.choice(self.frozen_lake.action_space, p=down_right_prob)
                     new_gene.append(new_move)
@@ -47,44 +64,58 @@ class GeneticAlgorithmSolver(GeneticAlgorithm):
             if random.random() < 0.2:
                 new_gene.append(random.choice(self.frozen_lake.action_space))
             self.new_population.append(new_gene)
+        self.population = self.new_population
             
+    def evaluate_gene_illustrate(self, gene):
+        """
+        Evaluate the gene by playing the game with it, and calculating the fitness.
+        This is our implementation of elitism, where we keep the best gene from the population.
+        """
+        print(f"gene sequence: {gene}")
+
+        for movement in gene:
+            self.frozen_lake.render()
+            if not self.frozen_lake.game_over:
+                self.frozen_lake.take_action(movement)
+                pygame.display.update()
+                pygame.time.wait(100)
+            if self.frozen_lake.won:
+                self.best_gene = gene
+                self.get_algorithm_stats()
+                print(self.stats)
+                pygame.quit()
+                sys.exit()
+        self.calculate_fitness(gene)
+        print(f"Evaluated Gene: {gene}, with fitness: {str(self.frozen_lake.fitness)}. The current best gene is: {self.best_gene} with fitness: {str(self.frozen_lake.best_fitness)}")  
+    
+        if self.frozen_lake.fitness >= self.frozen_lake.best_fitness:
+            self.frozen_lake.best_fitness = self.frozen_lake.fitness
+            self.best_gene = gene
+            self.avoid_repetitive_gene(self.best_gene)
+            print(f"New best gene updated to: {self.best_gene} with fitness: {self.frozen_lake.best_fitness}")
+        else:
+            self.avoid_repetitive_gene(self.best_gene)
+        
     def evaluate_gene(self, gene):
         """
         Evaluate the gene by playing the game with it, and calculating the fitness.
         This is our implementation of elitism, where we keep the best gene from the population.
         """
-        self.frozen_lake.restart()
-        print(f"gene sequence: {gene}")
-
-
-
         for movement in gene:
-            self.frozen_lake.render()
             self.frozen_lake.take_action(movement)
-            pygame.display.update()
-            pygame.time.wait(100)
-
-            if self.frozen_lake.game_over:
-                print("game over for this gene")
-                self.frozen_lake.restart()
-                return
             if self.frozen_lake.won:
                 self.best_gene = gene
-                self.stats.best_gene = gene
-                self.stats.best_fitness = self.frozen_lake.fitness
-                print(self.stats.__str__)
-                continue
+                self.get_algorithm_stats()
+                return
         self.calculate_fitness(gene)
-        print(f"Evaluated Gene: {gene}, with fitness: {str(self.frozen_lake.fitness)}. The current best gene is: {self.best_gene} with fitness: {str(self.frozen_lake.best_fitness)}")  
-    
-        if self.frozen_lake.fitness > self.frozen_lake.best_fitness:
+        if self.frozen_lake.fitness >= self.frozen_lake.best_fitness:
             self.frozen_lake.best_fitness = self.frozen_lake.fitness
             self.best_gene = gene
-            print(f"New best gene updated to: {self.best_gene} with fitness: {self.frozen_lake.best_fitness}")
+            self.avoid_repetitive_gene(self.best_gene)
         else:
             self.avoid_repetitive_gene(self.best_gene)
 
 
 #fl = FrozenLake(slippery=False) 
-#solver = GeneticAlgorithmSolver(fl, population_size=5, gene_length=3) 
-#solver.solve()
+#solver = GeneticAlgorithmSolver(fl, population_size=10, gene_length=4) 
+#solver.solve_illustrate()

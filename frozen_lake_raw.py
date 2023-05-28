@@ -1,15 +1,7 @@
 import numpy as np
 import random
-import pygame
-import sys 
-from images.load_images import load_image
 
-player_image = load_image(f"images/student.png", size=(100, 100))
-goal_image = load_image(f"images/nova.png", size=(100, 100))
-hole_image = load_image(f"images/cat.png", size=(100, 100))
-
-
-class FrozenLake:
+class FrozenLakeRaw:
     def __init__(self, size: int = 4, population: list =[], slippery: bool= False):
         self.size: int = size
         self.population: int = population
@@ -25,18 +17,14 @@ class FrozenLake:
         self.fitness = 0
         self.best_fitness = 0
         self.slippery = slippery
-        pygame.init()
-        self.screen = pygame.display.set_mode((500, 500))
-        self.font = pygame.font.SysFont('Arial', 20)
-        self.colors = {'black': (0, 0, 0), 'white': (255, 255, 255), 'red': (255, 0, 0), 'green': (0, 255, 0), 'blue': (0, 0, 255)}
         self.ACTIONS = {
                     'u': (-1, 0),
                     'd': (1, 0),
                     'l': (0, -1),
                     'r': (0, 1),
                 }
+        
     def generate_hole_positions(self):
-
         artificial_path = [(0,0), self.goal_pos]
         current_pos = (0,0)
         while current_pos != self.goal_pos:
@@ -57,28 +45,6 @@ class FrozenLake:
                     if random.random() < 0.3:
                         hole_positions.append((i,j))
         return hole_positions
-
-    def render(self):
-        block_size = 100
-        for i in range(self.size):
-            for j in range(self.size):
-                rect = pygame.Rect(j * block_size, i * block_size, block_size, block_size)
-                if self.player_pos == (i, j):
-                    self.screen.blit(player_image, (j * block_size, i * block_size))
-                    label = self.font.render('P', True, self.colors['white'])
-
-                elif self.goal_pos == (i, j):
-                    self.screen.blit(goal_image, (j * block_size, i * block_size))
-                    label = self.font.render('G', True, self.colors['white'])
-
-                elif (i, j) in self.hole_positions:
-                    self.screen.blit(hole_image, (j * block_size, i * block_size))
-                    label = self.font.render('H', True, self.colors['white'])
-
-                else:
-                    pygame.draw.rect(self.screen, self.colors['white'], rect)
-        pygame.display.flip()
-
 
     def take_action(self, action):
         if self.game_over:
@@ -102,20 +68,12 @@ class FrozenLake:
             self.total_reward += self.rewards['move']
             self.player_pos = new_pos
 
-
     def play_auto_agent(self, movements):
-
         for mov in movements:
-            self.render()
-            pygame.display.update()
             reward = self.take_action(mov)
-            pygame.time.wait(10)
-
             if self.won:
                 print('Yay')
-                pygame.time.wait(500)
-                pygame.quit()
-                sys.exit()
+                break
 
     def restart(self):
         self.game_over = False
@@ -123,39 +81,17 @@ class FrozenLake:
         self.player_pos = (0, 0)
         self.total_reward = 0.0
 
-
     def play(self, auto_agent=False):
-        clock = pygame.time.Clock()
         while not self.game_over:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
-
-            self.render()
-            pygame.display.update()
-
             # handle user input
-            keys = pygame.key.get_pressed()
-            if keys[pygame.K_UP]:
-                action = 'u'
-            elif keys[pygame.K_DOWN]:
-                action = 'd'
-            elif keys[pygame.K_LEFT]:
-                action = 'l'
-            elif keys[pygame.K_RIGHT]:
-                action = 'r'
+            if not auto_agent:
+                action = input("Enter action (u/d/l/r): ")
             else:
-                action = None
+                action = auto_agent.pop(0)
 
             # take action and update game state
-            if action is not None:
+            if action in self.action_space:
                 reward = self.take_action(action)
                 if self.game_over:
                     print('Game over')
-                    pygame.time.wait(2000)
-                    pygame.quit()
-                    sys.exit()
-
-            # wait for a short time to slow down the game
-            clock.tick(10)
+                    break

@@ -28,24 +28,25 @@ class GeneticAlgorithm:
         else:
             if np.array_equal(gene, self.last_best_gene):
                 self.buffer += 1
+            else:
+                self.last_best_gene = gene
+                self.buffer = 0
             if self.buffer == 50:
                 self.buffer = 0
                 # delete the last element of the best_gene
                 self.last_best_gene = np.array([])
                 self.best_gene = self.best_gene[:-1]
-                print("deleted the last element of the best_gene due to repetitive genes policy")
+                logging.info("deleted the last element of the best_gene due to repetitive genes policy")
 
     @abc.abstractmethod
-    def calculate_fitness(self, gene, gene_length_penalty: int = 0.5, opposite_actions_penalty: int = 0.6):
+    def calculate_fitness(self, gene, gene_length_penalty: int = 0.1, opposite_actions_penalty: int = 0.8):
         if not self.frozen_lake.game_over:
             distance_to_goal = abs(self.frozen_lake.player_pos[0] - self.frozen_lake.goal_pos[0]) + abs(self.frozen_lake.player_pos[1] - self.frozen_lake.goal_pos[1])
-            self.frozen_lake.fitness = 1 / (distance_to_goal + gene_length_penalty * len(gene))
+            self.frozen_lake.fitness = self.frozen_lake.total_reward / (distance_to_goal + 1) 
             opposite_actions = {'u': 'd', 'd': 'u', 'l': 'r', 'r': 'l'}
             for i in range(len(gene)-1):
                 if gene[i+1] == opposite_actions[gene[i]]:
                     self.frozen_lake.fitness -= opposite_actions_penalty
-            self.frozen_lake.fitness = round(self.frozen_lake.fitness, 2) + self.frozen_lake.total_reward
-
 
     def calculate_gene_fitness(self, gene: list[str]) -> int:
         for movement in gene:

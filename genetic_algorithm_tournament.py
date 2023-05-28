@@ -76,10 +76,10 @@ class GeneticAlgorithmSolverTournament(GeneticAlgorithm):
                 for movement in gene:
                     self.frozen_lake.render()
                     pygame.display.update()
-                    reward = self.frozen_lake.take_action(movement)
+                    self.frozen_lake.take_action(movement)
                     pygame.time.wait(10)
                     if self.frozen_lake.won:
-                        print("Won")
+                        print("Stats")
                         self.best_gene = gene
                         self.get_algorithm_stats()
                         print(self.stats)
@@ -92,9 +92,12 @@ class GeneticAlgorithmSolverTournament(GeneticAlgorithm):
         self.population = self.initialize_population()
         while not self.frozen_lake.won:
             self.generation += 1
+            if self.generation > 100:
+                self.get_algorithm_stats()
+                return
             for gene in self.population:
                 for movement in gene:
-                    reward = self.frozen_lake.take_action(movement)
+                    self.frozen_lake.take_action(movement)
                     if self.frozen_lake.won:
                         self.best_gene = gene
                         self.get_algorithm_stats()
